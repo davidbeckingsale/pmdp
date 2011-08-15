@@ -5,6 +5,7 @@ import markdown
 import webkit
 import sys
 import gio
+import gobject
 import os
 import urllib
 
@@ -55,7 +56,6 @@ a markdown file as the argument, e.g. `pmdp test.md`
         out_scroll.add(self.wv)
         out_scroll.set_policy(gtk.POLICY_AUTOMATIC,gtk.POLICY_AUTOMATIC)
 
-
         bbox = gtk.HButtonBox()
         bbox.set_layout(gtk.BUTTONBOX_START)
         savebutton = gtk.Button("Save HTML")
@@ -84,28 +84,33 @@ a markdown file as the argument, e.g. `pmdp test.md`
 
     def monitor_file(self):
         """Start monitoring the file"""
+        print 'monitoring file'
         file = gio.File(self.mdfile)
-        monitor = file.monitor_file()
-        monitor.connect ("changed", self.update_from_file) 
+        self.monitor = file.monitor_file()
+        self.monitor.connect ("changed", self.update_from_file) 
 
     def read_file(self):
         """Read the file into the text variable """
         with open(self.mdfile) as f:
+            print 'reading file'
             self.text = f.read()
 
     def render(self):
         """Render self.text as markdown, store in html_text"""
+        print 'rendering...'
         self.htmltext = markdown.markdown(self.text)
 
     def update_html(self):
         """Update the html in the webview"""
+        print 'updating html!'
         if self.file_name != None:
             self.wv.load_html_string(self.htmltext, self.file_name+".html")
         else:
             self.wv.load_html_string(self.htmltext, "file:///")
 
-    def update_from_file(self, monitor=None, file=None, unknown=None, event=None):
+    def update_from_file(self, monitor, file, unknown, event):
         """Re-read the file and update the rendered text and the web view."""
+        print 'triggered update_from_file'
         self.read_file()
         self.render()
         self.update_html()
@@ -138,9 +143,12 @@ a markdown file as the argument, e.g. `pmdp test.md`
             path = self.get_file_path_from_dnd_dropped_uri(uri)
             if os.path.isfile(path): # is it file?
                 self.mdfile = path
+        
+        print self.mdfile
 
         self.monitor_file()
-        self.update_from_file()
+        self.file_name = self.mdfile.split(".")[0]
+        self.update_from_file(None, None, None, None)
         context.finish(True, False, time) 
 
     def get_file_path_from_dnd_dropped_uri(self, uri):
