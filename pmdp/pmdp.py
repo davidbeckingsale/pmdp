@@ -5,13 +5,16 @@ import markdown
 import webkit
 import sys
 import gio
-import gobject
 import os
 import urllib
 
 class Gui(object):
     def _quit(self, *args):
         gtk.main_quit()
+
+    def quit_accel(self, accel_group, acceleratable, keyval, modifier):
+        """Function called by C-q"""
+        self._quit()
 
     def __init__(self):
         self.mdfile = None
@@ -37,6 +40,7 @@ a markdown file as the argument, e.g. `pmdp test.md`
 
 [md]: http://daringfireball.net/projects/markdown/
 """
+            self.file_name = 'intro'
 
         self.htmltext = ""
 
@@ -79,6 +83,16 @@ a markdown file as the argument, e.g. `pmdp test.md`
         self.wv.connect('drag_motion', self.motion_cb)
         self.wv.connect('drag_drop', self.drop_cb)
         self.wv.connect('drag_data_received', self.got_data_cb)
+
+        accel = gtk.AccelGroup()
+        # C-q will quit the app
+        accel.connect_group(gtk.keysyms.q, gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE, self.quit_accel)
+        # C-s will write the html to a file
+        accel.connect_group(gtk.keysyms.s, gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE, self.write_html_accel)
+        #lock the group
+        accel.lock()
+        #add the group to the window
+        window.add_accel_group(accel)
 
         gtk.main()
 
@@ -123,6 +137,10 @@ a markdown file as the argument, e.g. `pmdp test.md`
         with open(htmlfile, 'w') as f:
             f.write(self.htmltext)
 
+    def write_html_accel(self, accel_group, acceleratable, keyval, modifier):
+        """Function connected to C-s shortcut."""
+        self.write_html(widget=None)
+
     def motion_cb(self, wid, context, x, y, time):
         context.drag_status(gtk.gdk.ACTION_COPY, time)
         # Returning True which means "I accept this data".
@@ -143,7 +161,7 @@ a markdown file as the argument, e.g. `pmdp test.md`
             path = self.get_file_path_from_dnd_dropped_uri(uri)
             if os.path.isfile(path): # is it file?
                 self.mdfile = path
-        
+
         print self.mdfile
 
         self.monitor_file()
