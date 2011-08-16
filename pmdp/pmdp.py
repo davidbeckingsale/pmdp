@@ -86,9 +86,11 @@ a markdown file as the argument, e.g. `pmdp test.md`
 
         accel = gtk.AccelGroup()
         # C-q will quit the app
-        accel.connect_group(gtk.keysyms.q, gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE, self.quit_accel)
+        accel.connect_group(gtk.keysyms.q, gtk.gdk.CONTROL_MASK,
+                            gtk.ACCEL_VISIBLE, self.quit_accel)
         # C-s will write the html to a file
-        accel.connect_group(gtk.keysyms.s, gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE, self.write_html_accel)
+        accel.connect_group(gtk.keysyms.s, gtk.gdk.CONTROL_MASK,
+                            gtk.ACCEL_VISIBLE, self.write_html_accel)
         #lock the group
         accel.lock()
         #add the group to the window
